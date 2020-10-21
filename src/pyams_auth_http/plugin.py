@@ -29,7 +29,7 @@ __docformat__ = 'restructuredtext'
 from pyams_auth_http import _  # pylint: disable=ungrouped-imports
 
 
-ENVKEY_PARSED_CREDENTIALS = "pyams_auth_http.credentials.basic"
+PARSED_CREDENTIALS_ENVKEY = "pyams_auth_http.credentials.basic"
 
 CUSTOM_LOGIN = re.compile(r'^{(.*)}\.?(.*)')
 
@@ -48,7 +48,7 @@ class HttpBasicCredentialsPlugin:
     title = _("HTTP Basic credentials")
     enabled = True
 
-    @wsgi_environ_cache(ENVKEY_PARSED_CREDENTIALS)
+    @wsgi_environ_cache(PARSED_CREDENTIALS_ENVKEY)
     def extract_credentials(self, request, **kwargs):  # pylint: disable=unused-argument
         """Extract login/password credentials from given request"""
         auth = request.headers.get('Authorization')

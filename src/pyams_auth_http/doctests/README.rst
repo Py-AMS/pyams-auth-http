@@ -2,19 +2,87 @@
 PyAMS HTTP authentication package
 =================================
 
+
 Introduction
 ------------
 
 This package is composed of a set of utility functions, usable into any Pyramid application.
+It's an extension to PyAMS_security, which allows extraction of user's credentials from HTTP
+"Authorization" headers:
 
-    >>> from pyramid.testing import setUp, tearDown, DummyRequest
-    >>> config = setUp()
+    >>> import pprint
 
+    >>> from pyramid.testing import tearDown, DummyRequest
+    >>> from pyams_security.tests import setup_tests_registry, new_test_request
+    >>> config = setup_tests_registry()
+    >>> config.registry.settings['zodbconn.uri'] = 'memory://'
+
+    >>> from pyramid_zodbconn import includeme as include_zodbconn
+    >>> include_zodbconn(config)
+    >>> from pyams_utils import includeme as include_utils
+    >>> include_utils(config)
+    >>> from pyams_mail import includeme as include_mail
+    >>> include_mail(config)
+    >>> from pyams_site import includeme as include_site
+    >>> include_site(config)
+    >>> from pyams_security import includeme as include_security
+    >>> include_security(config)
     >>> from pyams_auth_http import includeme as include_auth_http
     >>> include_auth_http(config)
 
+    >>> from pyams_utils.registry import get_utility, set_local_registry
+    >>> registry = config.registry
+    >>> set_local_registry(registry)
+
+    >>> from pyams_site.generations import upgrade_site
+    >>> request = DummyRequest()
+    >>> app = upgrade_site(request)
+    Upgrading PyAMS timezone to generation 1...
+    Upgrading PyAMS security to generation 1...
+
+    >>> from zope.traversing.interfaces import BeforeTraverseEvent
+    >>> from pyams_utils.registry import handle_site_before_traverse
+    >>> handle_site_before_traverse(BeforeTraverseEvent(app, request))
+
+    >>> from pyams_security.interfaces import ISecurityManager
+    >>> sm = get_utility(ISecurityManager)
+
     >>> from pyams_security.interfaces import ICredentialsPlugin
-    >>> plugin = config.registry.getUtility(ICredentialsPlugin, name='http-basic')
+    >>> plugin = get_utility(ICredentialsPlugin, name='http-basic')
+
+
+Using PyAMS security policy
+---------------------------
+
+The plugin should be included correctly into PyAMS security policy:
+
+    >>> from pyramid.authorization import ACLAuthorizationPolicy
+    >>> config.set_authorization_policy(ACLAuthorizationPolicy())
+
+    >>> from pyams_security.policy import PyAMSAuthenticationPolicy
+    >>> policy = PyAMSAuthenticationPolicy(secret='my secret',
+    ...                                    http_only=True,
+    ...                                    secure=False)
+    >>> config.set_authentication_policy(policy)
+
+    >>> plugin in sm.credentials_plugins
+    True
+    >>> plugin in sm.authentication_plugins
+    False
+    >>> plugin in sm.directory_plugins
+    False
+
+    >>> request = new_test_request('admin', 'admin', registry=config.registry)
+    >>> policy.unauthenticated_userid(request)
+    'admin'
+    >>> policy.authenticated_userid(request)
+    'system:admin'
+
+
+Extracting credentials from request
+-----------------------------------
+
+The main feature of this plugin is to extract credentials from HTTP Authorization header:
 
     >>> import base64
     >>> encoded = base64.encodebytes(b'john:doe').decode()
@@ -107,6 +175,20 @@ Authentication methods other than "Basic" are not actually supported:
     >>> creds = plugin.extract_credentials(request)
     >>> creds is None
     True
+
+
+Getting effective principals via security policy require a Beaker cache:
+
+    >>> from beaker.cache import CacheManager, cache_regions
+    >>> cache = CacheManager(**{'cache.type': 'memory'})
+    >>> cache_regions.update({'short': {'type': 'memory', 'expire': 0}})
+
+    >>> sorted(policy.effective_principals(request))
+    ['system.Everyone']
+
+    >>> request = new_test_request('admin', 'admin', registry=config.registry)
+    >>> sorted(policy.effective_principals(request))
+    ['system.Authenticated', 'system.Everyone', 'system:admin']
 
 
 Tests cleanup:
