@@ -4,7 +4,6 @@
 !/bin/
 !/parts/
 !/develop-eggs/
-!/src/pyams_auth_http/**/__pycache__/
 !/src/pyams_auth_http.egg-info/
 /.coverage
 /coverage.xml
