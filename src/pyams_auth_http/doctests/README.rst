@@ -38,7 +38,7 @@ It's an extension to PyAMS_security, which allows extraction of user's credentia
     >>> request = DummyRequest()
     >>> app = upgrade_site(request)
     Upgrading PyAMS timezone to generation 1...
-    Upgrading PyAMS security to generation 1...
+    Upgrading PyAMS security to generation 2...
 
     >>> from zope.traversing.interfaces import BeforeTraverseEvent
     >>> from pyams_utils.registry import handle_site_before_traverse
@@ -65,6 +65,13 @@ The plugin should be included correctly into PyAMS security policy:
     ...                                    secure=False)
     >>> config.set_authentication_policy(policy)
 
+Getting effective principals via security policy require a Beaker cache:
+
+    >>> from beaker.cache import CacheManager, cache_regions
+    >>> cache = CacheManager(**{'cache.type': 'memory'})
+    >>> cache_regions.update({'short': {'type': 'memory', 'expire': 0}})
+    >>> cache_regions.update({'long': {'type': 'memory', 'expire': 0}})
+
     >>> plugin in sm.credentials_plugins
     True
     >>> plugin in sm.authentication_plugins
@@ -72,9 +79,9 @@ The plugin should be included correctly into PyAMS security policy:
     >>> plugin in sm.directory_plugins
     False
 
-    >>> request = new_test_request('admin', 'admin', registry=config.registry)
+    >>> request = new_test_request('{system}.admin', 'admin', registry=config.registry)
     >>> policy.unauthenticated_userid(request)
-    'admin'
+    'system:admin'
     >>> policy.authenticated_userid(request)
     'system:admin'
 
@@ -176,17 +183,10 @@ Authentication methods other than "Basic" are not actually supported:
     >>> creds is None
     True
 
-
-Getting effective principals via security policy require a Beaker cache:
-
-    >>> from beaker.cache import CacheManager, cache_regions
-    >>> cache = CacheManager(**{'cache.type': 'memory'})
-    >>> cache_regions.update({'short': {'type': 'memory', 'expire': 0}})
-
     >>> sorted(policy.effective_principals(request))
     ['system.Everyone']
 
-    >>> request = new_test_request('admin', 'admin', registry=config.registry)
+    >>> request = new_test_request('{system}.admin', 'admin', registry=config.registry)
     >>> sorted(policy.effective_principals(request))
     ['system.Authenticated', 'system.Everyone', 'system:admin']
 
