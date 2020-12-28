@@ -98,6 +98,14 @@ The main feature of this plugin is to extract credentials from HTTP Authorizatio
     'Basic am9objpkb2U=\n'
 
     >>> creds = plugin.extract_credentials(request)
+    >>> creds is None
+    True
+
+Credentials are set to None because the given credentials can't be authenticated!
+We can extract credentials without authenticating them:
+
+    >>> request = DummyRequest(headers={'Authorization': 'Basic {}'.format(encoded)})
+    >>> creds = plugin.extract_credentials(request, authenticate=False)
     >>> creds
     <pyams_security.credential.Credentials object at 0x...>
     >>> creds.prefix
@@ -113,7 +121,7 @@ We can also handle passwords containing a semicolon:
 
     >>> encoded = base64.encodebytes(b'john:doe:pwd').decode()
     >>> request = DummyRequest(headers={'Authorization': 'Basic {}'.format(encoded)})
-    >>> creds = plugin.extract_credentials(request)
+    >>> creds = plugin.extract_credentials(request, authenticate=False)
     >>> creds
     <pyams_security.credential.Credentials object at 0x...>
     >>> creds.prefix
@@ -130,7 +138,7 @@ Passwords with encoded characters should be also accepted:
 
     >>> encoded = base64.encodebytes('john:pass@àé'.encode('latin1')).decode()
     >>> request = DummyRequest(headers={'Authorization': 'Basic {}'.format(encoded)})
-    >>> creds = plugin.extract_credentials(request)
+    >>> creds = plugin.extract_credentials(request, authenticate=False)
     >>> creds
     <pyams_security.credential.Credentials object at 0x...>
     >>> creds.prefix
@@ -160,7 +168,7 @@ None:
 This plugin also provides a custom login management feature, which allows to give a prefix to
 a login, using braces followed by a dot:
 
-    >>> encoded = base64.encodebytes(b'{system}.admin:john').decode()
+    >>> encoded = base64.encodebytes(b'{system}.admin:admin').decode()
     >>> request = DummyRequest(headers={'Authorization': 'Basic {}'.format(encoded)})
     >>> creds = plugin.extract_credentials(request)
     >>> creds
@@ -172,8 +180,15 @@ a login, using braces followed by a dot:
     >>> creds.attributes.get('login')
     'admin'
     >>> creds.attributes.get('password')
-    'john'
+    'admin'
 
+This should not work with bad credentials:
+
+    >>> encoded = base64.encodebytes(b'{system}.admin:john').decode()
+    >>> request = DummyRequest(headers={'Authorization': 'Basic {}'.format(encoded)})
+    >>> creds = plugin.extract_credentials(request)
+    >>> creds is None
+    True
 
 Authentication methods other than "Basic" are not actually supported:
 

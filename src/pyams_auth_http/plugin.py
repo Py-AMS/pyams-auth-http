@@ -19,8 +19,8 @@ import base64
 import re
 
 from pyams_security.credential import Credentials
-from pyams_security.interfaces import ICredentialsPlugin
-from pyams_utils.registry import utility_config
+from pyams_security.interfaces import ICredentialsPlugin, ISecurityManager
+from pyams_utils.registry import query_utility, utility_config
 from pyams_utils.wsgi import wsgi_environ_cache
 
 
@@ -48,7 +48,7 @@ class HttpBasicCredentialsPlugin:
     title = _("HTTP Basic credentials")
     enabled = True
 
-    @wsgi_environ_cache(PARSED_CREDENTIALS_ENVKEY)
+    @wsgi_environ_cache(PARSED_CREDENTIALS_ENVKEY, store_none=False)
     def extract_credentials(self, request, **kwargs):  # pylint: disable=unused-argument
         """Extract login/password credentials from given request"""
         auth = request.headers.get('Authorization')
@@ -69,6 +69,17 @@ class HttpBasicCredentialsPlugin:
                 prefix, login = principal_id.split(':')  # pylint: disable=unused-variable
             else:
                 principal_id = login
-            return Credentials(self.prefix, principal_id, login=login, password=password)
+            # validate credentials
+            credentials = Credentials(self.prefix, principal_id,
+                                      login=login, password=password)
+            if not kwargs.get('authenticate', True):
+                return credentials
+            sm = query_utility(ISecurityManager)  # pylint: disable=invalid-name
+            if sm is not None:
+                principal_id = sm.authenticate(credentials, request)
+                if principal_id is not None:
+                    credentials.id = principal_id
+                    return credentials
+            return None
         except (ValueError, TypeError):
             return None
