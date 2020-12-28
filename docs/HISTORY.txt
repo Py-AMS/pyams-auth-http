@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.1.0
+-----
+ - use security manager to authenticate credentials
+
 1.0.1
 -----
  - updated doctests
