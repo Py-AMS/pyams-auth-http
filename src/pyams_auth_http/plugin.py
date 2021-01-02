@@ -45,7 +45,7 @@ class HttpBasicCredentialsPlugin:
     """
 
     prefix = 'http'
-    title = _("HTTP Basic credentials")
+    title = _("HTTP basic authentication")
     enabled = True
 
     @wsgi_environ_cache(PARSED_CREDENTIALS_ENVKEY, store_none=False)
