@@ -19,7 +19,8 @@ import base64
 import re
 
 from pyams_security.credential import Credentials
-from pyams_security.interfaces import ICredentialsPlugin, ISecurityManager
+from pyams_security.interfaces import ISecurityManager
+from pyams_security.interfaces.plugin import ICredentialsPlugin
 from pyams_utils.registry import query_utility, utility_config
 from pyams_utils.wsgi import wsgi_environ_cache
 

@@ -49,7 +49,7 @@ It's an extension to PyAMS_security, which allows extraction of user's credentia
     >>> from pyams_security.interfaces import ISecurityManager
     >>> sm = get_utility(ISecurityManager)
 
-    >>> from pyams_security.interfaces import ICredentialsPlugin
+    >>> from pyams_security.interfaces.plugin import ICredentialsPlugin
     >>> plugin = get_utility(ICredentialsPlugin, name='http-basic')
 
 
