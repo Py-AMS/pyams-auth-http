@@ -1,6 +1,10 @@
 Changelog
 =========
 
+1.2.2
+-----
+ - added support for Python 3.11
+
 1.2.1
 -----
  - PyAMS_security interfaces refactoring

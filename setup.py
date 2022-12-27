@@ -20,13 +20,15 @@ from setuptools import setup, find_packages
 DOCS = os.path.join(os.path.dirname(__file__),
                     'docs')
 
-README = os.path.join(DOCS, 'README.txt')
-HISTORY = os.path.join(DOCS, 'HISTORY.txt')
+README = os.path.join(DOCS, 'README.rst')
+HISTORY = os.path.join(DOCS, 'HISTORY.rst')
 
-version = '1.2.1'
+version = '1.2.2'
 long_description = open(README).read() + '\n\n' + open(HISTORY).read()
 
-tests_require = []
+tests_require = [
+    'pyams_layer'
+]
 
 
 setup(name='pyams_auth_http',
