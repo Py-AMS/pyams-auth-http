@@ -23,7 +23,7 @@ DOCS = os.path.join(os.path.dirname(__file__),
 README = os.path.join(DOCS, 'README.rst')
 HISTORY = os.path.join(DOCS, 'HISTORY.rst')
 
-version = '1.2.2'
+version = '2.0.0'
 long_description = open(README).read() + '\n\n' + open(HISTORY).read()
 
 tests_require = [
@@ -63,6 +63,6 @@ setup(name='pyams_auth_http',
           # -*- Extra requirements: -*-
           'pyams_security',
           'pyams_utils',
-          'pyramid'
+          'pyramid >= 2.0.0'
       ],
       entry_points="")
