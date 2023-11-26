@@ -58,14 +58,11 @@ Using PyAMS security policy
 
 The plugin should be included correctly into PyAMS security policy:
 
-    >>> from pyramid.authorization import ACLAuthorizationPolicy
-    >>> config.set_authorization_policy(ACLAuthorizationPolicy())
-
-    >>> from pyams_security.policy import PyAMSAuthenticationPolicy
-    >>> policy = PyAMSAuthenticationPolicy(secret='my secret',
-    ...                                    http_only=True,
-    ...                                    secure=False)
-    >>> config.set_authentication_policy(policy)
+    >>> from pyams_security.policy import PyAMSSecurityPolicy
+    >>> policy = PyAMSSecurityPolicy(secret='my secret',
+    ...                              http_only=True,
+    ...                              secure=False)
+    >>> config.set_security_policy(policy)
 
 Getting effective principals via security policy require a Beaker cache:
 
@@ -82,8 +79,6 @@ Getting effective principals via security policy require a Beaker cache:
     False
 
     >>> request = new_test_request('{system}.admin', 'admin', registry=config.registry)
-    >>> policy.unauthenticated_userid(request)
-    'system:admin'
     >>> policy.authenticated_userid(request)
     'system:admin'
 
@@ -200,11 +195,13 @@ Authentication methods other than "Basic" are not actually supported:
     >>> creds is None
     True
 
-    >>> sorted(policy.effective_principals(request))
-    ['system.Everyone']
+    >>> identity = policy.get_identity(request)
+    >>> identity is None
+    True
 
     >>> request = new_test_request('{system}.admin', 'admin', registry=config.registry)
-    >>> sorted(policy.effective_principals(request))
+    >>> identity = request.identity
+    >>> sorted(identity.get('principals', ()))
     ['system.Authenticated', 'system.Everyone', 'system:admin']
 
 
